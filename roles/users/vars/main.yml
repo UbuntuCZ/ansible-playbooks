@@ -1,0 +1,8 @@
+---
+admin_users:
+  - username: mstanke
+    comment: Michal Stanke
+  - username: vojtecht
+    comment: Vojtěch Trefný
+
+regular_users: []

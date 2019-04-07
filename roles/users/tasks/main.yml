@@ -1,0 +1,66 @@
+---
+- name: Create 'wheel' group
+  group:
+    name: wheel
+    state: present
+
+- name: Add 'wheel' to sudoers
+  lineinfile:
+    dest: /etc/sudoers
+    regexp: '^%wheel '
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    state: present
+    validate: visudo -cf %s
+
+- name: Create admin users
+  user:
+    name: "{{ item.username }}"
+    comment: "{{ item.comment }}"
+    groups: wheel
+    shell: /bin/bash
+    state: present
+  with_items: "{{ admin_users }}"
+
+- name: Create regular users
+  user:
+    name: "{{ item.username }}"
+    comment: "{{ item.comment }}"
+    shell: /bin/bash
+    state: present
+  with_items: "{{ regular_users }}"
+
+- name: Set public keys for all users
+  authorized_key:
+    user: "{{ item.username }}"
+    key: "{{ lookup('file', '../files/public_keys/{{ item.username }}') }}"
+    state: present
+  with_flattened:
+    - "{{ admin_users }}"
+    - "{{ regular_users }}"
+
+- name: Allow ssh for defined users only
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    insertafter: '^#AllowUsers '
+    regexp: '^AllowUsers '
+    line: "AllowUsers {{ [admin_users, regular_users] | flatten | map(attribute='username') | join(' ') }}"
+    state: present
+  notify: 'reload sshd'
+
+- name: Allow ssh with key only
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    insertafter: '^#PasswordAuthentication '
+    regexp: '^PasswordAuthentication '
+    line: 'PasswordAuthentication no'
+    state: present
+  notify: 'reload sshd'
+
+- name: Disable ssh login for 'root'
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    insertafter: '^#PermitRootLogin '
+    regexp: '^PermitRootLogin '
+    line: 'PermitRootLogin no'
+    state: present
+  notify: 'reload sshd'

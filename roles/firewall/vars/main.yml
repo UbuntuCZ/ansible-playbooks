@@ -1,0 +1,18 @@
+---
+ingress_ports_allowed:
+  # SSH
+  - protocol: tcp
+    port: 22
+
+egress_ports_allowed:
+  # DNS
+  - protocol: udp
+    port: 53
+  - protocol: tcp
+    port: 53
+  # HTTP
+  - protocol: tcp
+    port: 80
+  # HTTPS
+  - protocol: tcp
+    port: 443

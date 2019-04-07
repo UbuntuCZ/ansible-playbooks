@@ -1,0 +1,23 @@
+---
+- name: Disable livepatch message after SSH login
+  lineinfile:
+    dest: /etc/update-motd.d/80-livepatch
+    insertafter: '^#!/bin/sh$'
+    regexp: '^exit 0$'
+    line: 'exit 0'
+    state: present
+
+- name: Disable Message Of The Day after SSH login
+  lineinfile:
+    dest: /etc/default/motd-news
+    regexp: '^ENABLED='
+    line: 'ENABLED=0'
+    state: present
+
+- name: Disable help message after SSH login
+  lineinfile:
+    dest: /etc/update-motd.d/10-help-text
+    insertafter: '^#!/bin/sh$'
+    regexp: '^exit 0$'
+    line: 'exit 0'
+    state: present

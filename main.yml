@@ -1,0 +1,19 @@
+---
+- name: Pinďa.Ubuntu.cz
+  hosts: all
+  gather_facts: no
+  become: yes
+
+  pre_tasks:
+    # Server dependency to run Ansible tasks
+    - name: Install Python
+      raw: apt install -y python
+    # Gather facts after all Anible dependencies are installed
+    - name: Gather facts
+      setup:
+
+  roles:
+    - firewall
+    - users
+    - system-tools
+    - ubuntu-tweaks

@@ -1,0 +1,87 @@
+---
+- name: Install iptables and fail2ban
+  apt:
+    name:
+      - iptables
+      - iptables-persistent
+      - fail2ban
+    state: present
+
+- name: Allow incoming traffic
+  iptables:
+    chain: INPUT
+    ip_version: "{{ item[1] }}"
+    protocol: "{{ item[0].protocol }}"
+    destination_port: "{{ item[0].port }}"
+    jump: ACCEPT
+    state: present
+  with_cartesian:
+    - "{{ ingress_ports_allowed }}"
+    - - ipv4
+      - ipv6
+  notify:
+    - 'restart networking'
+    - 'persist iptables'
+
+- name: Allow incoming traffic (response)
+  iptables:
+    chain: OUTPUT
+    ip_version: "{{ item[1] }}"
+    protocol: "{{ item[0].protocol }}"
+    source_port: "{{ item[0].port }}"
+    jump: ACCEPT
+    state: present
+  with_cartesian:
+    - "{{ ingress_ports_allowed }}"
+    - - ipv4
+      - ipv6
+  notify:
+    - 'restart networking'
+    - 'persist iptables'
+
+- name: Allow outgoing traffic
+  iptables:
+    chain: OUTPUT
+    ip_version: "{{ item[1] }}"
+    protocol: "{{ item[0].protocol }}"
+    destination_port: "{{ item[0].port }}"
+    jump: ACCEPT
+    state: present
+  with_cartesian:
+    - "{{ egress_ports_allowed }}"
+    - - ipv4
+      - ipv6
+  notify:
+    - 'restart networking'
+    - 'persist iptables'
+
+- name: Allow outgoing traffic (response)
+  iptables:
+    chain: INPUT
+    ip_version: "{{ item[1] }}"
+    protocol: "{{ item[0].protocol }}"
+    source_port: "{{ item[0].port }}"
+    jump: ACCEPT
+    state: present
+  with_cartesian:
+    - "{{ egress_ports_allowed }}"
+    - - ipv4
+      - ipv6
+  notify:
+    - 'restart networking'
+    - 'persist iptables'
+
+- name: Block all not allowed traffic
+  iptables:
+    chain: "{{ item[0] }}"
+    ip_version: "{{ item[1] }}"
+    policy: DROP
+  with_cartesian:
+    - - INPUT
+      - FORWARD
+      - OUTPUT
+    - - ipv4
+      - ipv6
+  notify:
+    - 'restart networking'
+    - 'persist iptables'

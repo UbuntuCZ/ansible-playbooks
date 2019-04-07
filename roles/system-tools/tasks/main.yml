@@ -1,0 +1,8 @@
+---
+- name: Install CLI tools
+  apt:
+    name:
+      - curl
+      - dnsutils
+      - htop
+    state: present
